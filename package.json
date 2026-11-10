@@ -1,0 +1,45 @@
+{
+	"name": "mcbe-block-upgrader",
+	"version": "1.0.0",
+	"description": "Library to update Minecraft Bedrock blocks to the latest version",
+	"keywords": [
+		"mcbe",
+		"minecraft"
+	],
+	"homepage": "https://holoprint-mc.github.io/MCBE-Block-Upgrader",
+	"bugs": {
+		"url": "https://github.com/HoloPrint-MC/MCBE-Block-Upgrader/issues"
+	},
+	"license": "MIT",
+	"author": "SuperLlama88888",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/HoloPrint-MC/MCBE-Block-Upgrader.git"
+	},
+	"files": [
+		"dist"
+	],
+	"type": "module",
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"scripts": {
+		"build": "tsc",
+		"dev": "tsc --watch",
+		"update": "node update.ts",
+		"prepublishOnly": "npm run build"
+	},
+	"dependencies": {
+	},
+	"devDependencies": {
+		"@types/node": "^26.2.0",
+		"globals": "^17.9.0",
+		"jiti": "^2.7.0"
+	}
+}

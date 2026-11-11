@@ -33,5 +33,10 @@ schemaFileNames.forEach(schemaFileName => {
 	latestVersion = Math.max(latestVersion, schema.version);
 });
 
-const outputCode = `import type { UpgradeSchema } from "./upgradeSchema.ts"; export const schemas: UpgradeSchema[] = ${JSON.stringify(schemas)}; export const latestVersion = ${latestVersion};`;
+const outputCode = `
+import type { UpgradeSchema } from "./upgradeSchema.ts";
+export const schemas: UpgradeSchema[] = ${JSON.stringify(schemas)};
+/** The version of the latest schema. Blocks above this version will not be upgraded. All blocks will have their versions set to this when they are upgraded. */
+export const latestVersion = ${latestVersion};
+`;
 fs.writeFileSync(SCHEMAS_DEST, outputCode);

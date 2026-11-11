@@ -10,6 +10,8 @@ import type {
 	UpgradeSchemaFlattenRule
 } from "./upgradeSchema.js";
 
+export { latestVersion };
+
 export type Block = {
 	/** The block's ID */
 	name: string;

@@ -38,23 +38,7 @@ export function update(block: Block): boolean {
 		}
 	}
 	block.version = latestVersion;
-	if(updated) {
-		const oldBlockStringified = stringifyBlock(block);
-		console.debug(`Updated ${oldBlockStringified} to ${stringifyBlock(block)}`);
-	}
 	return updated;
-}
-/** "Stringifies" a block with its name and states. */
-export function stringifyBlock(block: Block | Block, includeVersion: boolean = true): string {
-	const blockStates = Object.entries(block.states).map(([name, value]) => `${name}=${value}`).join(",");
-	let res = block.name.replace(/^minecraft:/, "");
-	if(blockStates.length) {
-		res += `[${blockStates}]`;
-	}
-	if(includeVersion && "version" in block) {
-		res += `@${parseBlockVersion(block.version).join(".")}`;
-	}
-	return res;
 }
 /** Expands the block version number found in structure NBT into an array. */
 export function parseBlockVersion(blockVersion: number): number[] {
@@ -67,11 +51,9 @@ export function parseBlockVersion(blockVersion: number): number[] {
  */
 function applyUpdateSchema(schema: UpgradeSchema, block: Block): boolean {
 	if(block.version > schema.version) {
-		console.error(`Trying to upgrade block from ${block.version} to ${schema.version}!`);
 		return false;
 	}
 	if(block.name in (schema.flattenedProperties ?? {}) && block.name in (schema.renamedIds ?? {})) {
-		console.error(`Cannot flatten and rename block ${block.name} at the same time: ${JSON.stringify(schema)}`);
 		return false;
 	}
 
@@ -115,7 +97,6 @@ function applyUpdateSchema(schema: UpgradeSchema, block: Block): boolean {
 	Object.entries(schema.addedProperties?.[block.name] ?? {}).forEach(([blockStateName, blockStateProperty]) => {
 		const blockStateValue = readBlockStateProperty(blockStateProperty);
 		if(blockStateName in block.states) {
-			console.debug(`Cannot add block state ${blockStateName} = ${blockStateValue} because it already exists on block ${stringifyBlock(block)}`);
 			return;
 		}
 		block.states[blockStateName] = blockStateValue;
@@ -124,7 +105,6 @@ function applyUpdateSchema(schema: UpgradeSchema, block: Block): boolean {
 	// removed properties: remove block states
 	schema.removedProperties?.[block.name]?.forEach(blockStateName => {
 		if(!(blockStateName in block.states)) {
-			console.debug(`Cannot delete block state ${blockStateName} because it doesn't exist on block ${stringifyBlock(block)}`);
 			return;
 		}
 		delete block.states[blockStateName];
@@ -133,18 +113,15 @@ function applyUpdateSchema(schema: UpgradeSchema, block: Block): boolean {
 	// remapped property values: change block state values
 	Object.entries(schema.remappedPropertyValues?.[block.name] ?? {}).forEach(([blockStateName, remappingName]) => {
 		if(!(blockStateName in block.states)) {
-			console.debug(`Cannot remap value for block state ${blockStateName} because the state doesn't exist: ${stringifyBlock(block)}`);
 			return;
 		}
 		const currentBlockStateValue = block.states[blockStateName];
 		if(!(remappingName in schema.remappedPropertyValuesIndex!)) {
-			console.debug(`Block state value remapping ${remappingName} not found in schema!`);
 			return;
 		}
 		const remappings = schema.remappedPropertyValuesIndex![remappingName];
 		const remapping = remappings.find(remapping => currentBlockStateValue == readBlockStateProperty(remapping.old));
 		if(remapping == undefined) {
-			console.debug(`Cannot find block state value ${currentBlockStateValue} in remappings for block state ${blockStateName}: ${JSON.stringify(remappings)}`);
 			return;
 		}
 		block.states[blockStateName] = readBlockStateProperty(remapping.new);
@@ -153,7 +130,6 @@ function applyUpdateSchema(schema: UpgradeSchema, block: Block): boolean {
 	// renamed properties: rename block states
 	Object.entries(schema.renamedProperties?.[block.name] ?? {}).forEach(([oldStateName, newStateName]) => {
 		if(!(oldStateName in block.states)) {
-			console.debug(`Cannot rename block state ${oldStateName} -> ${newStateName} because it doesn't exist on block ${stringifyBlock(block)}`);
 			return;
 		}
 		block.states[newStateName] = block.states[oldStateName];
@@ -181,7 +157,6 @@ function applyUpdateSchema(schema: UpgradeSchema, block: Block): boolean {
 function applyFlattenedProperty(flattenRule: UpgradeSchemaFlattenRule, block: Block): boolean {
 	const blockStateName = flattenRule.flattenedProperty;
 	if(!(blockStateName in block.states)) {
-		console.debug(`Cannot flatten block state ${blockStateName} because it doesn't exist on block ${stringifyBlock(block)}, ${JSON.stringify(flattenRule)}`);
 		return false;
 	}
 	const blockStateValue = block.states[blockStateName];

@@ -1,6 +1,6 @@
 {
 	"name": "mcbe-block-upgrader",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Library to update Minecraft Bedrock blocks to the latest version",
 	"keywords": [
 		"mcbe",

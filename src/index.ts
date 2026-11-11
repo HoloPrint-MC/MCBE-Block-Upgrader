@@ -8,7 +8,7 @@ import type {
 	TypedBlockStateProperty,
 	UpgradeSchema,
 	UpgradeSchemaFlattenRule
-} from "./upgradeSchema.ts";
+} from "./upgradeSchema.js";
 
 export type Block = {
 	/** The block's ID */

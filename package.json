@@ -35,11 +35,9 @@
 		"update": "node update.ts",
 		"prepublishOnly": "npm run build"
 	},
-	"dependencies": {
-	},
 	"devDependencies": {
-		"@types/node": "^26.2.0",
-		"globals": "^17.9.0",
-		"jiti": "^2.7.0"
+		"@types/node": "^26.6.6",
+		"jiti": "^2.7.0",
+		"typescript": "^6.0.2"
 	}
 }

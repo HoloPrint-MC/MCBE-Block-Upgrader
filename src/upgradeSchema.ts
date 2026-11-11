@@ -6,7 +6,7 @@ export type TypedBlockStateProperty = {
 	/** A byte property. */
 	byte?: number;
 };
-export type BlockUpdateSchemaFlattenRule = {
+export type UpgradeSchemaFlattenRule = {
 	/** The prefix for the flattened property. */
 	prefix: string;
 	/** The name of the flattened property. */
@@ -18,38 +18,21 @@ export type BlockUpdateSchemaFlattenRule = {
 	/** A mapping of flattened values. */
 	flattenedValueRemaps?: Record<string, string>;
 };
-export type BlockUpdateSchemaRemappedState = {
+export type UpgradeSchemaRemappedState = {
 	/** The property values before the remapping. */
 	oldState: Record<string, TypedBlockStateProperty> | null;
 	/** An optional new name for the block. */
 	newName?: string;
 	/** An optional flattened property rule providing a new name. */
-	newFlattenedName?: BlockUpdateSchemaFlattenRule;
+	newFlattenedName?: UpgradeSchemaFlattenRule;
 	/** The new property values after the remapping. */
 	newState: Record<string, TypedBlockStateProperty> | null;
 	/** Optional list of property names to copy from the old state. */
 	copiedState?: string[];
 };
-export type BlockUpdateSchemaSkeleton = {
-	filename: string;
-	/** The major version (must be >= 0). */
-	maxVersionMajor: number;
-	/** The minor version (must be >= 0). */
-	maxVersionMinor: number;
-	/** The patch version (must be >= 0). */
-	maxVersionPatch: number;
-	/** The revision version (must be >= 0). */
-	maxVersionRevision: number;
-};
-export type BlockUpdateSchema = {
-	/** The major version (must be >= 0). */
-	maxVersionMajor: number;
-	/** The minor version (must be >= 0). */
-	maxVersionMinor: number;
-	/** The patch version (must be >= 0). */
-	maxVersionPatch: number;
-	/** The revision version (must be >= 0). */
-	maxVersionRevision: number;
+export type UpgradeSchema = {
+	/** Packed version number: major, minor, patch, revision */
+	version: number;
 	/** Mapping of renamed IDs. */
 	renamedIds?: Record<string, string>;
 	/** Mapping of added properties. */
@@ -66,7 +49,7 @@ export type BlockUpdateSchema = {
 		new: TypedBlockStateProperty;
 	}[]>;
 	/** Mapping of flattened properties. */
-	flattenedProperties?: Record<string, BlockUpdateSchemaFlattenRule>;
+	flattenedProperties?: Record<string, UpgradeSchemaFlattenRule>;
 	/** Mapping of remapped states. */
-	remappedStates?: Record<string, BlockUpdateSchemaRemappedState[]>;
+	remappedStates?: Record<string, UpgradeSchemaRemappedState[]>;
 };

@@ -1,16 +1,14 @@
 // Updates a block from older MCBE versions, using schemas from pmmp/BedrockBlockUpgradeSchema. This code was made with reference to https://github.com/pmmp/PocketMine-MP/blob/5.21.0/src/data/bedrock/block/upgrade/BlockStateUpgrader.php and https://github.com/RaphiMC/ViaBedrock/blob/main/src/main/java/net/raphimc/viabedrock/api/chunk/blockstate/JsonBlockStateUpgradeSchema.java.
 
+import {
+	latestVersion,
+	schemas
+} from "./schemas.js";
 import type {
-	BlockUpdateSchema,
-	BlockUpdateSchemaFlattenRule,
-	BlockUpdateSchemaSkeleton,
-	TypedBlockStateProperty
+	TypedBlockStateProperty,
+	UpgradeSchema,
+	UpgradeSchemaFlattenRule
 } from "./upgradeSchema.ts";
-
-declare const fetchers: {
-	bedrockBlockUpgradeSchema(path: string): Promise<Response>;
-};
-declare const LATEST_VERSION: number;
 
 export type Block = {
 	/** The block's ID */
@@ -20,48 +18,28 @@ export type Block = {
 	version: number;
 };
 
-const schemaIndex: Record<string, BlockUpdateSchemaSkeleton[]> = {};
-const schemas: Map<string, BlockUpdateSchema> = new Map();
-
 /** Checks if a block needs updating to the latest Minecraft version. */
 export function blockNeedsUpdating(block: Block): boolean {
-	return block.version <= LATEST_VERSION;
+	return block.version <= latestVersion;
 }
 /**
  * Upgrades a block from older Minecraft versions to the latest Minecraft version.
  * @returns Whether or not the block was updated. (The version number will always be updated.)
  */
-export async function update(block: Block): Promise<boolean> {
-	const oldBlockStringified = stringifyBlock(block);
-	if(Object.keys(schemaIndex).length == 0) {
-		const schemaList: BlockUpdateSchemaSkeleton[] = await fetchers.bedrockBlockUpgradeSchema("schema_list.json").then(res => res.json());
-		schemaList.forEach(schemaSkeleton => {
-			const schemaVersion = getSchemaVersion(schemaSkeleton);
-			schemaIndex[schemaVersion] ??= [];
-			schemaIndex[schemaVersion].push(schemaSkeleton);
-		});
+export function update(block: Block): boolean {
+	if(!blockNeedsUpdating(block)) {
+		return false;
 	}
-	const schemasToApply: string[] = [];
-	Object.entries(schemaIndex).forEach(([version, schemaSkeletons]) => {
-		if(block.version > +version || schemaSkeletons.length == 1 && block.version == +version) {
-			return;
-		}
-		schemasToApply.push(...schemaSkeletons.map(schemaSkeleton => schemaSkeleton.filename));
-	});
-	await Promise.all(schemasToApply.map(async schemaFilename => {
-		if(!schemas.has(schemaFilename)) {
-			schemas.set(schemaFilename, await fetchers.bedrockBlockUpgradeSchema(`nbt_upgrade_schema/${schemaFilename}`).then(res => res.json()));
-		}
-	}));
 	let updated = false;
-	schemasToApply.forEach(schemaFileName => {
-		const schema = schemas.get(schemaFileName)!;
-		if(applyUpdateSchema(schema, block)) {
+	const schemaToStartFrom = schemas.findIndex(schema => block.version <= schema.version);
+	for(let i = schemaToStartFrom; i < schemas.length; i++) {
+		if(applyUpdateSchema(schemas[i], block)) {
 			updated = true;
 		}
-	});
-	block.version = LATEST_VERSION;
+	}
+	block.version = latestVersion;
 	if(updated) {
+		const oldBlockStringified = stringifyBlock(block);
 		console.debug(`Updated ${oldBlockStringified} to ${stringifyBlock(block)}`);
 	}
 	return updated;
@@ -87,10 +65,9 @@ export function parseBlockVersion(blockVersion: number): number[] {
  * Applies a schema to a block.
  * @returns Whether or not the block changed between versions. (The version number will always be updated, unless it encountered an error.)
  */
-function applyUpdateSchema(schema: BlockUpdateSchema, block: Block): boolean {
-	const schemaVersion = getSchemaVersion(schema);
-	if(block.version > schemaVersion) {
-		console.error(`Trying to upgrade block from ${block.version} to ${schemaVersion}!`);
+function applyUpdateSchema(schema: UpgradeSchema, block: Block): boolean {
+	if(block.version > schema.version) {
+		console.error(`Trying to upgrade block from ${block.version} to ${schema.version}!`);
 		return false;
 	}
 	if(block.name in (schema.flattenedProperties ?? {}) && block.name in (schema.renamedIds ?? {})) {
@@ -129,7 +106,7 @@ function applyUpdateSchema(schema: BlockUpdateSchema, block: Block): boolean {
 		block.states = newStates;
 		return true; // if states are remapped, there's no need to look at the rest of the schema
 	})) {
-		block.version = schemaVersion;
+		block.version = schema.version;
 		return true;
 	}
 
@@ -194,14 +171,14 @@ function applyUpdateSchema(schema: BlockUpdateSchema, block: Block): boolean {
 		block.name = schema.renamedIds![block.name];
 		hasBeenUpdated = true;
 	}
-	block.version = schemaVersion;
+	block.version = schema.version;
 	return hasBeenUpdated;
 }
 /**
  * Flattens a block state to find the new block name for a block.
  * @returns If the block state was successfully flattened
  */
-function applyFlattenedProperty(flattenRule: BlockUpdateSchemaFlattenRule, block: Block): boolean {
+function applyFlattenedProperty(flattenRule: UpgradeSchemaFlattenRule, block: Block): boolean {
 	const blockStateName = flattenRule.flattenedProperty;
 	if(!(blockStateName in block.states)) {
 		console.debug(`Cannot flatten block state ${blockStateName} because it doesn't exist on block ${stringifyBlock(block)}, ${JSON.stringify(flattenRule)}`);
@@ -215,7 +192,4 @@ function applyFlattenedProperty(flattenRule: BlockUpdateSchemaFlattenRule, block
 }
 function readBlockStateProperty(blockStateProperty: TypedBlockStateProperty): number | string {
 	return Object.values(blockStateProperty)[0]; // blockStateValue is an object that's either { "string": "value" }, { "int": 0 }, or { "byte": 0 } but it's all the same in JS
-}
-function getSchemaVersion(schema: BlockUpdateSchema | BlockUpdateSchemaSkeleton): number {
-	return (schema.maxVersionMajor << 24) | (schema.maxVersionMinor << 16) | (schema.maxVersionPatch << 8) | schema.maxVersionRevision;
 }

@@ -24,6 +24,7 @@ if(!fs.existsSync(SCHEMA_REPO_TEMP_DIR)) {
 
 const schemaFileNames = fs.readdirSync(path.join(SCHEMA_REPO_TEMP_DIR, SCHEMA_REPO_SCHEMAS_SOURCE_DIR));
 const schemas: string[] = [];
+let latestVersion = -Infinity;
 schemaFileNames.forEach(schemaFileName => {
 	const schema = JSON.parse(fs.readFileSync(path.join(SCHEMA_REPO_TEMP_DIR, SCHEMA_REPO_SCHEMAS_SOURCE_DIR, schemaFileName), "utf-8"));
 	schema.version = schema.maxVersionMajor << 24 | schema.maxVersionMinor << 16 | schema.maxVersionPatch << 8 | schema.maxVersionRevision;
@@ -32,7 +33,8 @@ schemaFileNames.forEach(schemaFileName => {
 	delete schema.maxVersionPatch;
 	delete schema.maxVersionRevision;
 	schemas.push(schema);
+	latestVersion = Math.max(latestVersion, schema.version);
 });
 
-const outputCode = `export default ${JSON.stringify(schemas)};`;
+const outputCode = `import type { UpgradeSchema } from "./upgradeSchema.ts"; export const schemas: UpgradeSchema[] = ${JSON.stringify(schemas)}; export const latestVersion = ${latestVersion};`;
 fs.writeFileSync(SCHEMAS_DEST, outputCode);

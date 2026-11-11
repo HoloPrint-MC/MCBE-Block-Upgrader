@@ -1,0 +1,31 @@
+name: Weekly sync - Update schemas if required
+
+on:
+  schedule:
+    - cron: "0 12 * * 3"
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  update:
+    name: Update schemas
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Sync
+        run: npm run sync
+      - name: Create pull request if there are changes
+        uses: peter-evans/create-pull-request@v8
+        with:
+          branch: update-schemas
+          commit-message: Update schemas
+          title: Update schemas
+          body: ""

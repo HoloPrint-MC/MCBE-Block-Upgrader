@@ -2,13 +2,10 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-const SCHEMA_REPO_URL = "https://github.com/opencollab-incubator/BedrockBlockUpgradeSchema";
-const SCHEMA_REPO_REF = "5.4.1+bedrock-1.26.60";
-const SCHEMA_REPO_SCHEMAS_SOURCE_DIR = "nbt_upgrade_schema";
-const SCHEMA_REPO_TEMP_DIR = "external";
-const SCHEMAS_DEST = "src/schemas.ts";
+import schemaConfig from "./schemaConfig.json" with { type: "json" };
+const { SCHEMA_REPO, SCHEMA_REPO_OWNER, SCHEMA_REPO_REF, SCHEMA_REPO_SCHEMAS_SOURCE_DIR, SCHEMA_REPO_TEMP_DIR, SCHEMAS_DEST } = schemaConfig;
 
-function git(args: string[], cwd: string = process.cwd()) {
+export function git(args: string[], cwd: string = process.cwd()) {
 	execFileSync("git", args, {
 		cwd,
 		stdio: "inherit"
@@ -16,7 +13,7 @@ function git(args: string[], cwd: string = process.cwd()) {
 }
 
 if(!fs.existsSync(SCHEMA_REPO_TEMP_DIR)) {
-	git(["clone", "--branch", SCHEMA_REPO_REF, SCHEMA_REPO_URL, SCHEMA_REPO_TEMP_DIR]);
+	git(["clone", "--branch", SCHEMA_REPO_REF, `https://github.com/${SCHEMA_REPO_OWNER}/${SCHEMA_REPO}`, SCHEMA_REPO_TEMP_DIR]);
 } else {
 	git(["fetch", "origin", SCHEMA_REPO_REF], SCHEMA_REPO_TEMP_DIR);
 	git(["checkout", "-f", "FETCH_HEAD"], SCHEMA_REPO_TEMP_DIR);

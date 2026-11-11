@@ -1,0 +1,8 @@
+{
+	"SCHEMA_REPO_OWNER": "opencollab-incubator",
+	"SCHEMA_REPO": "BedrockBlockUpgradeSchema",
+	"SCHEMA_REPO_REF": "5.4.1+bedrock-1.26.60",
+	"SCHEMA_REPO_SCHEMAS_SOURCE_DIR": "nbt_upgrade_schema",
+	"SCHEMA_REPO_TEMP_DIR": "external",
+	"SCHEMAS_DEST": "src/schemas.ts"
+}

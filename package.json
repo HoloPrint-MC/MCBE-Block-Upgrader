@@ -32,10 +32,12 @@
 	"scripts": {
 		"build": "tsc",
 		"dev": "tsc --watch",
-		"update": "node update.ts",
+		"sync": "node sync.ts",
+		"emitSchemas": "node emitSchemas.ts",
 		"prepublishOnly": "npm run build"
 	},
 	"devDependencies": {
+		"@octokit/rest": "^22.0.1",
 		"@types/node": "^26.6.6",
 		"jiti": "^2.7.0",
 		"typescript": "^6.0.2"
